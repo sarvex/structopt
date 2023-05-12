@@ -105,11 +105,9 @@ class Amalgamation(object):
 
 
 def _is_within(match, matches):
-    for m in matches:
-        if match.start() > m.start() and \
-                match.end() < m.end():
-            return True
-    return False
+    return any(
+        match.start() > m.start() and match.end() < m.end() for m in matches
+    )
 
 
 class TranslationUnit(object):
@@ -134,8 +132,7 @@ class TranslationUnit(object):
     # Search for pattern in self.content, add the match to
     # contexts if found and update the index accordingly.
     def _search_content(self, index, pattern, contexts):
-        match = pattern.search(self.content, index)
-        if match:
+        if match := pattern.search(self.content, index):
             contexts.append(match)
             return match.end()
         return index + 2

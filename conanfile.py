@@ -24,11 +24,13 @@ class StructoptConan(ConanFile):
 
     def set_version(self):
         import re
-        m = re.search(r"project\(.*VERSION ([0-9a-zA-Z.-]+)[ )]",
-                      open(os.path.join(self.recipe_folder, "CMakeLists.txt")).read())
-        if not m:
+        if m := re.search(
+            r"project\(.*VERSION ([0-9a-zA-Z.-]+)[ )]",
+            open(os.path.join(self.recipe_folder, "CMakeLists.txt")).read(),
+        ):
+            self.version = m.group(1)
+        else:
             raise ConanException("Could not extract version from CMakeLists.txt")
-        self.version = m.group(1)
 
     _cmake = None
 
@@ -50,9 +52,15 @@ class StructoptConan(ConanFile):
         programs = []
         import re
         for subdir in ("tests", "samples", ):
-            for match in re.finditer(r"add_executable\((\S+)",
-                                     open(os.path.join(self.source_folder, subdir, "CMakeLists.txt")).read()):
-                programs.append(os.path.join(self.build_folder, "bin", match.group(1)))
+            programs.extend(
+                os.path.join(self.build_folder, "bin", match.group(1))
+                for match in re.finditer(
+                    r"add_executable\((\S+)",
+                    open(
+                        os.path.join(self.source_folder, subdir, "CMakeLists.txt")
+                    ).read(),
+                )
+            )
         return programs
 
     @contextmanager
